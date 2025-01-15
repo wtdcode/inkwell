@@ -5,12 +5,7 @@ use either::{
 #[llvm_versions(14..)]
 use llvm_sys::core::LLVMGetGEPSourceElementType;
 use llvm_sys::core::{
-    LLVMGetAlignment, LLVMGetAllocatedType, LLVMGetFCmpPredicate, LLVMGetICmpPredicate, LLVMGetInstructionOpcode,
-    LLVMGetInstructionParent, LLVMGetMetadata, LLVMGetNextInstruction, LLVMGetNumOperands, LLVMGetOperand,
-    LLVMGetOperandUse, LLVMGetPreviousInstruction, LLVMGetVolatile, LLVMHasMetadata, LLVMInstructionClone,
-    LLVMInstructionEraseFromParent, LLVMInstructionRemoveFromParent, LLVMIsAAllocaInst, LLVMIsABasicBlock,
-    LLVMIsAGetElementPtrInst, LLVMIsALoadInst, LLVMIsAStoreInst, LLVMIsATerminatorInst, LLVMIsConditional,
-    LLVMIsTailCall, LLVMSetAlignment, LLVMSetMetadata, LLVMSetOperand, LLVMSetVolatile, LLVMValueAsBasicBlock,
+    LLVMGetAlignment, LLVMGetAllocatedType, LLVMGetFCmpPredicate, LLVMGetICmpPredicate, LLVMGetInstructionOpcode, LLVMGetInstructionParent, LLVMGetMetadata, LLVMGetNextInstruction, LLVMGetNumOperands, LLVMGetOperand, LLVMGetOperandUse, LLVMGetPreviousInstruction, LLVMGetSuccessor, LLVMGetVolatile, LLVMHasMetadata, LLVMInstructionClone, LLVMInstructionEraseFromParent, LLVMInstructionRemoveFromParent, LLVMIsAAllocaInst, LLVMIsABasicBlock, LLVMIsAGetElementPtrInst, LLVMIsALoadInst, LLVMIsAStoreInst, LLVMIsATerminatorInst, LLVMIsConditional, LLVMIsTailCall, LLVMSetAlignment, LLVMSetMetadata, LLVMSetOperand, LLVMSetVolatile, LLVMValueAsBasicBlock
 };
 use llvm_sys::core::{LLVMGetOrdering, LLVMSetOrdering};
 #[llvm_versions(10..)]
@@ -217,6 +212,17 @@ impl<'ctx> InstructionValue<'ctx> {
         }
 
         unsafe { Some(InstructionValue::new(value)) }
+    }
+
+    pub fn get_successor(self, i: u32) -> Option<BasicBlock<'ctx>> {
+        unsafe {
+            let bb = LLVMGetSuccessor(self.as_value_ref(), i);
+            if bb.is_null() {
+                return None
+            }
+
+            return BasicBlock::new(bb)
+        }
     }
 
     // REVIEW: Potentially unsafe if parent BB or grandparent fn were removed?

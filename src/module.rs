@@ -9,10 +9,10 @@ use llvm_sys::core::LLVMGetTypeByName;
 
 use llvm_sys::core::{
     LLVMAddFunction, LLVMAddGlobal, LLVMAddGlobalInAddressSpace, LLVMAddNamedMetadataOperand, LLVMCloneModule,
-    LLVMDisposeModule, LLVMDumpModule, LLVMGetFirstFunction, LLVMGetFirstGlobal, LLVMGetLastFunction,
-    LLVMGetLastGlobal, LLVMGetModuleContext, LLVMGetModuleIdentifier, LLVMGetNamedFunction, LLVMGetNamedGlobal,
-    LLVMGetNamedMetadataNumOperands, LLVMGetNamedMetadataOperands, LLVMGetTarget, LLVMPrintModuleToFile,
-    LLVMPrintModuleToString, LLVMSetDataLayout, LLVMSetModuleIdentifier, LLVMSetTarget, LLVMDisposeMessage
+    LLVMDisposeMessage, LLVMDisposeModule, LLVMDumpModule, LLVMGetFirstFunction, LLVMGetFirstGlobal,
+    LLVMGetLastFunction, LLVMGetLastGlobal, LLVMGetModuleContext, LLVMGetModuleIdentifier, LLVMGetNamedFunction,
+    LLVMGetNamedGlobal, LLVMGetNamedMetadataNumOperands, LLVMGetNamedMetadataOperands, LLVMGetTarget,
+    LLVMPrintModuleToFile, LLVMPrintModuleToString, LLVMSetDataLayout, LLVMSetModuleIdentifier, LLVMSetTarget,
 };
 #[llvm_versions(7..)]
 use llvm_sys::core::{LLVMAddModuleFlag, LLVMGetModuleFlag};

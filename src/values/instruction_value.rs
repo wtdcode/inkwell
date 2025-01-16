@@ -4,7 +4,10 @@ use either::{
 };
 #[llvm_versions(14..)]
 use llvm_sys::core::LLVMGetGEPSourceElementType;
-use llvm_sys::core::{LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsADbgInfoIntrinsic, LLVMIsAPHINode, LLVMSetOrdering};
+use llvm_sys::core::{
+    LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsADbgInfoIntrinsic, LLVMIsAPHINode,
+    LLVMSetOrdering,
+};
 #[llvm_versions(10..)]
 use llvm_sys::core::{LLVMIsAAtomicCmpXchgInst, LLVMIsAAtomicRMWInst};
 use llvm_sys::prelude::LLVMValueRef;
@@ -28,7 +31,10 @@ use std::{
     marker::PhantomData,
 };
 
-use crate::{basic_block::BasicBlock, types::{AnyTypeEnum, FunctionType}};
+use crate::{
+    basic_block::BasicBlock,
+    types::{AnyTypeEnum, FunctionType},
+};
 use crate::{
     debug_info::DILocation,
     values::{BasicValue, BasicValueEnum, BasicValueUse, MetadataValue, Value},
@@ -138,10 +144,10 @@ impl<'ctx> InstructionValue<'ctx> {
         !unsafe { LLVMIsAGetElementPtrInst(self.as_value_ref()) }.is_null()
     }
     pub fn is_a_phi_node(self) -> bool {
-        !unsafe {LLVMIsAPHINode(self.as_value_ref())}.is_null()
+        !unsafe { LLVMIsAPHINode(self.as_value_ref()) }.is_null()
     }
     pub fn is_a_dbg_info_intrinsic(self) -> bool {
-        !unsafe {LLVMIsADbgInfoIntrinsic(self.as_value_ref())}.is_null()
+        !unsafe { LLVMIsADbgInfoIntrinsic(self.as_value_ref()) }.is_null()
     }
     #[llvm_versions(10..)]
     fn is_a_atomicrmw_inst(self) -> bool {
@@ -153,7 +159,7 @@ impl<'ctx> InstructionValue<'ctx> {
     }
 
     pub fn get_called_function(self) -> Option<FunctionValue<'ctx>> {
-        unsafe  {
+        unsafe {
             let val = LLVMGetCalledValue(self.as_value_ref());
             if val.is_null() {
                 return None;
@@ -165,7 +171,7 @@ impl<'ctx> InstructionValue<'ctx> {
                 }
                 let ftype = FunctionType::new(ftype);
                 if ftype == f.get_type() {
-                    return Some(f)
+                    return Some(f);
                 }
             }
 

@@ -111,7 +111,6 @@ use llvm_sys::core::LLVMMetadataAsValue;
 #[llvm_versions(8..)]
 use llvm_sys::debuginfo::LLVMDIBuilderCreateTypedef;
 pub use llvm_sys::debuginfo::LLVMDWARFTypeEncoding;
-use llvm_sys::debuginfo::{LLVMDISubprogramGetLine, LLVMDebugMetadataVersion};
 use llvm_sys::debuginfo::LLVMDisposeDIBuilder;
 use llvm_sys::debuginfo::LLVMMetadataReplaceAllUsesWith;
 use llvm_sys::debuginfo::LLVMTemporaryMDNode;
@@ -129,6 +128,7 @@ use llvm_sys::debuginfo::{
 };
 #[llvm_versions(8..)]
 use llvm_sys::debuginfo::{LLVMDIBuilderCreateConstantValueExpression, LLVMDIBuilderCreateGlobalVariableExpression};
+use llvm_sys::debuginfo::{LLVMDISubprogramGetLine, LLVMDebugMetadataVersion};
 use llvm_sys::prelude::{LLVMDIBuilderRef, LLVMMetadataRef};
 use std::convert::TryInto;
 use std::marker::PhantomData;
@@ -1141,7 +1141,7 @@ impl<'ctx> DISubprogram<'ctx> {
     }
 
     pub fn get_line(&self) -> u32 {
-        unsafe { LLVMDISubprogramGetLine(self.as_mut_ptr())}
+        unsafe { LLVMDISubprogramGetLine(self.as_mut_ptr()) }
     }
 }
 

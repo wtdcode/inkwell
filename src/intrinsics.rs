@@ -19,7 +19,7 @@ impl Intrinsic {
     /// Create an Intrinsic object from raw LLVM intrinsic id
     ///
     /// SAFETY: the id is a valid LLVM intrinsic ID
-    pub(crate) unsafe fn new(id: u32) -> Self {
+    pub unsafe fn new(id: u32) -> Self {
         Self { id }
     }
 

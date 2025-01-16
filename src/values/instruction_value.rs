@@ -4,25 +4,35 @@ use either::{
 };
 #[llvm_versions(14..)]
 use llvm_sys::core::LLVMGetGEPSourceElementType;
-use llvm_sys::core::{
-    LLVMGetAlignment, LLVMGetAllocatedType, LLVMGetFCmpPredicate, LLVMGetICmpPredicate, LLVMGetInstructionOpcode,
-    LLVMGetInstructionParent, LLVMGetMetadata, LLVMGetNextInstruction, LLVMGetNumOperands, LLVMGetOperand,
-    LLVMGetOperandUse, LLVMGetPreviousInstruction, LLVMGetSuccessor, LLVMGetVolatile, LLVMHasMetadata,
-    LLVMInstructionClone, LLVMInstructionEraseFromParent, LLVMInstructionRemoveFromParent, LLVMIsAAllocaInst,
-    LLVMIsABasicBlock, LLVMIsAGetElementPtrInst, LLVMIsALoadInst, LLVMIsAStoreInst, LLVMIsATerminatorInst,
-    LLVMIsConditional, LLVMIsTailCall, LLVMSetAlignment, LLVMSetMetadata, LLVMSetOperand, LLVMSetVolatile,
-    LLVMValueAsBasicBlock,
-};
 use llvm_sys::core::{LLVMGetOrdering, LLVMSetOrdering};
 #[llvm_versions(10..)]
 use llvm_sys::core::{LLVMIsAAtomicCmpXchgInst, LLVMIsAAtomicRMWInst};
 use llvm_sys::prelude::LLVMValueRef;
 use llvm_sys::LLVMOpcode;
+use llvm_sys::{
+    core::{
+        LLVMGetAlignment, LLVMGetAllocatedType, LLVMGetFCmpPredicate, LLVMGetICmpPredicate, LLVMGetInstructionOpcode,
+        LLVMGetInstructionParent, LLVMGetMetadata, LLVMGetNextInstruction, LLVMGetNumOperands, LLVMGetOperand,
+        LLVMGetOperandUse, LLVMGetPreviousInstruction, LLVMGetSuccessor, LLVMGetVolatile, LLVMHasMetadata,
+        LLVMInstructionClone, LLVMInstructionEraseFromParent, LLVMInstructionRemoveFromParent, LLVMIsAAllocaInst,
+        LLVMIsABasicBlock, LLVMIsAGetElementPtrInst, LLVMIsALoadInst, LLVMIsAStoreInst, LLVMIsATerminatorInst,
+        LLVMIsConditional, LLVMIsTailCall, LLVMSetAlignment, LLVMSetMetadata, LLVMSetOperand, LLVMSetVolatile,
+        LLVMValueAsBasicBlock,
+    },
+    debuginfo::{LLVMGetMetadataKind, LLVMInstructionGetDebugLoc, LLVMMetadataKind},
+};
 
-use std::{ffi::CStr, fmt, fmt::Display};
+use std::{
+    ffi::CStr,
+    fmt::{self, Display},
+    marker::PhantomData,
+};
 
-use crate::values::{BasicValue, BasicValueEnum, BasicValueUse, MetadataValue, Value};
 use crate::{basic_block::BasicBlock, types::AnyTypeEnum};
+use crate::{
+    debug_info::DILocation,
+    values::{BasicValue, BasicValueEnum, BasicValueUse, MetadataValue, Value},
+};
 use crate::{types::BasicTypeEnum, values::traits::AsValueRef};
 use crate::{AtomicOrdering, FloatPredicate, IntPredicate};
 
@@ -165,6 +175,24 @@ impl<'ctx> InstructionValue<'ctx> {
             None
         } else {
             Some(self.instruction_value.get_name())
+        }
+    }
+
+    pub fn get_debug_location(&self) -> Option<DILocation<'ctx>> {
+        unsafe {
+            let debug_loc = LLVMInstructionGetDebugLoc(self.as_value_ref());
+            if debug_loc.is_null() {
+                return None;
+            }
+            // LLVM says it might not be DILocation
+            let kind = LLVMGetMetadataKind(debug_loc);
+            match kind {
+                LLVMMetadataKind::LLVMDILocationMetadataKind => Some(DILocation {
+                    metadata_ref: debug_loc,
+                    _marker: PhantomData,
+                }),
+                _ => None,
+            }
         }
     }
 

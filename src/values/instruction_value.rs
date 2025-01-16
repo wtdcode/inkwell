@@ -32,8 +32,7 @@ use std::{
 };
 
 use crate::{
-    basic_block::BasicBlock,
-    types::{AnyTypeEnum, FunctionType},
+    basic_block::BasicBlock, intrinsics::Intrinsic, types::{AnyTypeEnum, FunctionType}
 };
 use crate::{
     debug_info::DILocation,
@@ -177,6 +176,10 @@ impl<'ctx> InstructionValue<'ctx> {
 
             None
         }
+    }
+
+    pub fn get_intrinsic_id(self) -> Option<Intrinsic> {
+        self.get_called_function().map(|f| unsafe {Intrinsic::new(f.get_intrinsic_id())})
     }
 
     /// Get a value from an [LLVMValueRef].

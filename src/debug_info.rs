@@ -111,7 +111,7 @@ use llvm_sys::core::LLVMMetadataAsValue;
 #[llvm_versions(8..)]
 use llvm_sys::debuginfo::LLVMDIBuilderCreateTypedef;
 pub use llvm_sys::debuginfo::LLVMDWARFTypeEncoding;
-use llvm_sys::debuginfo::LLVMDebugMetadataVersion;
+use llvm_sys::debuginfo::{LLVMDISubprogramGetLine, LLVMDebugMetadataVersion};
 use llvm_sys::debuginfo::LLVMDisposeDIBuilder;
 use llvm_sys::debuginfo::LLVMMetadataReplaceAllUsesWith;
 use llvm_sys::debuginfo::LLVMTemporaryMDNode;
@@ -1138,6 +1138,10 @@ impl<'ctx> DISubprogram<'ctx> {
     /// Acquires the underlying raw pointer belonging to this `DISubprogram` type.
     pub fn as_mut_ptr(&self) -> LLVMMetadataRef {
         self.metadata_ref
+    }
+
+    pub fn get_line(&self) -> u32 {
+        unsafe { LLVMDISubprogramGetLine(self.as_mut_ptr())}
     }
 }
 

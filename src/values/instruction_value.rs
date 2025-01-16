@@ -4,7 +4,7 @@ use either::{
 };
 #[llvm_versions(14..)]
 use llvm_sys::core::LLVMGetGEPSourceElementType;
-use llvm_sys::core::{LLVMGetOrdering, LLVMSetOrdering};
+use llvm_sys::core::{LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsADbgInfoIntrinsic, LLVMIsAPHINode, LLVMSetOrdering};
 #[llvm_versions(10..)]
 use llvm_sys::core::{LLVMIsAAtomicCmpXchgInst, LLVMIsAAtomicRMWInst};
 use llvm_sys::prelude::LLVMValueRef;
@@ -28,7 +28,7 @@ use std::{
     marker::PhantomData,
 };
 
-use crate::{basic_block::BasicBlock, types::AnyTypeEnum};
+use crate::{basic_block::BasicBlock, types::{AnyTypeEnum, FunctionType}};
 use crate::{
     debug_info::DILocation,
     values::{BasicValue, BasicValueEnum, BasicValueUse, MetadataValue, Value},
@@ -36,7 +36,7 @@ use crate::{
 use crate::{types::BasicTypeEnum, values::traits::AsValueRef};
 use crate::{AtomicOrdering, FloatPredicate, IntPredicate};
 
-use super::AnyValue;
+use super::{AnyValue, FunctionValue};
 
 // REVIEW: Split up into structs for SubTypes on InstructionValues?
 // REVIEW: This should maybe be split up into InstructionOpcode and ConstOpcode?
@@ -125,17 +125,23 @@ pub struct InstructionValue<'ctx> {
 }
 
 impl<'ctx> InstructionValue<'ctx> {
-    fn is_a_load_inst(self) -> bool {
+    pub fn is_a_load_inst(self) -> bool {
         !unsafe { LLVMIsALoadInst(self.as_value_ref()) }.is_null()
     }
-    fn is_a_store_inst(self) -> bool {
+    pub fn is_a_store_inst(self) -> bool {
         !unsafe { LLVMIsAStoreInst(self.as_value_ref()) }.is_null()
     }
-    fn is_a_alloca_inst(self) -> bool {
+    pub fn is_a_alloca_inst(self) -> bool {
         !unsafe { LLVMIsAAllocaInst(self.as_value_ref()) }.is_null()
     }
-    fn is_a_getelementptr_inst(self) -> bool {
+    pub fn is_a_getelementptr_inst(self) -> bool {
         !unsafe { LLVMIsAGetElementPtrInst(self.as_value_ref()) }.is_null()
+    }
+    pub fn is_a_phi_node(self) -> bool {
+        !unsafe {LLVMIsAPHINode(self.as_value_ref())}.is_null()
+    }
+    pub fn is_a_dbg_info_intrinsic(self) -> bool {
+        !unsafe {LLVMIsADbgInfoIntrinsic(self.as_value_ref())}.is_null()
     }
     #[llvm_versions(10..)]
     fn is_a_atomicrmw_inst(self) -> bool {
@@ -144,6 +150,27 @@ impl<'ctx> InstructionValue<'ctx> {
     #[llvm_versions(10..)]
     fn is_a_cmpxchg_inst(self) -> bool {
         !unsafe { LLVMIsAAtomicCmpXchgInst(self.as_value_ref()) }.is_null()
+    }
+
+    pub fn get_called_function(self) -> Option<FunctionValue<'ctx>> {
+        unsafe  {
+            let val = LLVMGetCalledValue(self.as_value_ref());
+            if val.is_null() {
+                return None;
+            }
+            if let Some(f) = FunctionValue::new(val) {
+                let ftype = LLVMGetCalledFunctionType(self.as_value_ref());
+                if ftype.is_null() {
+                    return None;
+                }
+                let ftype = FunctionType::new(ftype);
+                if ftype == f.get_type() {
+                    return Some(f)
+                }
+            }
+
+            None
+        }
     }
 
     /// Get a value from an [LLVMValueRef].

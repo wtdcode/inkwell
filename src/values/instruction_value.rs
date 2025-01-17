@@ -5,8 +5,7 @@ use either::{
 #[llvm_versions(14..)]
 use llvm_sys::core::LLVMGetGEPSourceElementType;
 use llvm_sys::core::{
-    LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsADbgInfoIntrinsic, LLVMIsAPHINode,
-    LLVMSetOrdering,
+    LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsADbgInfoIntrinsic, LLVMIsAFunction, LLVMIsAPHINode, LLVMSetOrdering
 };
 #[llvm_versions(10..)]
 use llvm_sys::core::{LLVMIsAAtomicCmpXchgInst, LLVMIsAAtomicRMWInst};
@@ -161,6 +160,10 @@ impl<'ctx> InstructionValue<'ctx> {
         unsafe {
             let val = LLVMGetCalledValue(self.as_value_ref());
             if val.is_null() {
+                return None;
+            }
+            // val can be not a function!
+            if LLVMIsAFunction(val).is_null() {
                 return None;
             }
             if let Some(f) = FunctionValue::new(val) {

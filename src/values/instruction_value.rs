@@ -5,7 +5,7 @@ use either::{
 #[llvm_versions(14..)]
 use llvm_sys::core::LLVMGetGEPSourceElementType;
 use llvm_sys::core::{
-    LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsADbgInfoIntrinsic, LLVMIsAFunction, LLVMIsAPHINode, LLVMSetOrdering
+    LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsACallInst, LLVMIsADbgInfoIntrinsic, LLVMIsAFunction, LLVMIsAPHINode, LLVMSetOrdering
 };
 #[llvm_versions(10..)]
 use llvm_sys::core::{LLVMIsAAtomicCmpXchgInst, LLVMIsAAtomicRMWInst};
@@ -132,6 +132,11 @@ impl<'ctx> InstructionValue<'ctx> {
     pub fn is_a_load_inst(self) -> bool {
         !unsafe { LLVMIsALoadInst(self.as_value_ref()) }.is_null()
     }
+    pub fn is_a_call_inst(self) -> bool {
+        !unsafe {
+            LLVMIsACallInst(self.as_value_ref()).is_null()
+        }
+    }
     pub fn is_a_store_inst(self) -> bool {
         !unsafe { LLVMIsAStoreInst(self.as_value_ref()) }.is_null()
     }
@@ -158,6 +163,11 @@ impl<'ctx> InstructionValue<'ctx> {
 
     pub fn get_called_function(self) -> Option<FunctionValue<'ctx>> {
         unsafe {
+            // SAFTEY: LLVMGetCalledValue only accepts CallBase derives
+            if !self.is_a_call_inst() {
+                return None;
+            }    
+        
             let val = LLVMGetCalledValue(self.as_value_ref());
             if val.is_null() {
                 return None;

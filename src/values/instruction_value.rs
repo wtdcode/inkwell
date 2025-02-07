@@ -5,8 +5,8 @@ use either::{
 #[llvm_versions(14..)]
 use llvm_sys::core::LLVMGetGEPSourceElementType;
 use llvm_sys::core::{
-    LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsACallInst, LLVMIsADbgInfoIntrinsic,
-    LLVMIsAFunction, LLVMIsAInstruction, LLVMIsAPHINode, LLVMSetOrdering,
+    LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetNumSuccessors, LLVMGetOrdering, LLVMIsACallInst,
+    LLVMIsADbgInfoIntrinsic, LLVMIsAFunction, LLVMIsAInstruction, LLVMIsAPHINode, LLVMSetOrdering,
 };
 #[llvm_versions(10..)]
 use llvm_sys::core::{LLVMIsAAtomicCmpXchgInst, LLVMIsAAtomicRMWInst};
@@ -312,6 +312,17 @@ impl<'ctx> InstructionValue<'ctx> {
         }
 
         unsafe { Some(InstructionValue::new(value)) }
+    }
+
+    // SAFTETY: Must be terminator
+    pub fn get_num_successor(self) -> Option<usize> {
+        unsafe {
+            if !self.is_terminator() {
+                None
+            } else {
+                Some(LLVMGetNumSuccessors(self.as_value_ref()) as usize)
+            }
+        }
     }
 
     pub fn get_successor(self, i: u32) -> Option<BasicBlock<'ctx>> {

@@ -177,6 +177,21 @@ impl<'ctx> InstructionValue<'ctx> {
         }
     }
 
+    pub fn get_called_function_type(self) -> Option<FunctionType<'ctx>> {
+        unsafe {
+            if !self.is_a_call_inst() {
+                return None;
+            }
+
+            let ty = LLVMGetCalledFunctionType(self.as_value_ref());
+            if ty.is_null() {
+                return None;
+            }
+
+            Some(FunctionType::new(ty))
+        }
+    }
+
     pub fn get_called_function(self) -> Option<FunctionValue<'ctx>> {
         unsafe {
             // SAFTEY: LLVMGetCalledValue only accepts CallBase derives

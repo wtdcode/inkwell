@@ -1,6 +1,7 @@
 use llvm_sys::core::{LLVMConstReal, LLVMConstRealOfStringAndSize};
 use llvm_sys::execution_engine::LLVMCreateGenericValueOfFloat;
 use llvm_sys::prelude::LLVMTypeRef;
+use llvm_sys::LLVMTypeKind;
 
 use crate::context::ContextRef;
 use crate::support::LLVMString;
@@ -29,6 +30,11 @@ impl<'ctx> FloatType<'ctx> {
         FloatType {
             float_type: Type::new(float_type),
         }
+    }
+
+    /// Get inner `LLVMTypeKind`
+    pub fn kind(self) -> LLVMTypeKind {
+        self.float_type.kind()
     }
 
     /// Creates a `FunctionType` with this `FloatType` for its return type.

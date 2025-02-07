@@ -5,7 +5,8 @@ use either::{
 #[llvm_versions(14..)]
 use llvm_sys::core::LLVMGetGEPSourceElementType;
 use llvm_sys::core::{
-    LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsACallInst, LLVMIsADbgInfoIntrinsic, LLVMIsAFunction, LLVMIsAPHINode, LLVMSetOrdering
+    LLVMGetCalledFunctionType, LLVMGetCalledValue, LLVMGetOrdering, LLVMIsACallInst, LLVMIsADbgInfoIntrinsic,
+    LLVMIsAFunction, LLVMIsAInstruction, LLVMIsAPHINode, LLVMSetOrdering,
 };
 #[llvm_versions(10..)]
 use llvm_sys::core::{LLVMIsAAtomicCmpXchgInst, LLVMIsAAtomicRMWInst};
@@ -31,7 +32,9 @@ use std::{
 };
 
 use crate::{
-    basic_block::BasicBlock, intrinsics::Intrinsic, types::{AnyTypeEnum, FunctionType}
+    basic_block::BasicBlock,
+    intrinsics::Intrinsic,
+    types::{AnyTypeEnum, FunctionType},
 };
 use crate::{
     debug_info::DILocation,
@@ -133,9 +136,7 @@ impl<'ctx> InstructionValue<'ctx> {
         !unsafe { LLVMIsALoadInst(self.as_value_ref()) }.is_null()
     }
     pub fn is_a_call_inst(self) -> bool {
-        !unsafe {
-            LLVMIsACallInst(self.as_value_ref()).is_null()
-        }
+        !unsafe { LLVMIsACallInst(self.as_value_ref()).is_null() }
     }
     pub fn is_a_store_inst(self) -> bool {
         !unsafe { LLVMIsAStoreInst(self.as_value_ref()) }.is_null()
@@ -161,13 +162,28 @@ impl<'ctx> InstructionValue<'ctx> {
         !unsafe { LLVMIsAAtomicCmpXchgInst(self.as_value_ref()) }.is_null()
     }
 
+    pub fn get_called_instruction(self) -> Option<Self> {
+        unsafe {
+            let val = LLVMGetCalledValue(self.as_value_ref());
+            if val.is_null() {
+                return None;
+            }
+
+            if !LLVMIsAInstruction(val).is_null() {
+                Some(InstructionValue::new(val))
+            } else {
+                None
+            }
+        }
+    }
+
     pub fn get_called_function(self) -> Option<FunctionValue<'ctx>> {
         unsafe {
             // SAFTEY: LLVMGetCalledValue only accepts CallBase derives
             if !self.is_a_call_inst() {
                 return None;
-            }    
-        
+            }
+
             let val = LLVMGetCalledValue(self.as_value_ref());
             if val.is_null() {
                 return None;
@@ -192,7 +208,8 @@ impl<'ctx> InstructionValue<'ctx> {
     }
 
     pub fn get_intrinsic_id(self) -> Option<Intrinsic> {
-        self.get_called_function().map(|f| unsafe {Intrinsic::new(f.get_intrinsic_id())})
+        self.get_called_function()
+            .map(|f| unsafe { Intrinsic::new(f.get_intrinsic_id()) })
     }
 
     /// Get a value from an [LLVMValueRef].

@@ -81,6 +81,12 @@ impl<'ctx> Type<'ctx> {
         }
     }
 
+    pub fn kind(self) -> LLVMTypeKind {
+        unsafe {
+            LLVMGetTypeKind(self.ty)
+        }
+    }
+
     fn const_zero(self) -> LLVMValueRef {
         unsafe {
             match LLVMGetTypeKind(self.ty) {

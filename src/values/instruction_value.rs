@@ -315,12 +315,12 @@ impl<'ctx> InstructionValue<'ctx> {
     }
 
     // SAFTETY: Must be terminator
-    pub fn get_num_successor(self) -> Option<usize> {
+    pub fn get_num_successor(self) -> Option<u32> {
         unsafe {
             if !self.is_terminator() {
                 None
             } else {
-                Some(LLVMGetNumSuccessors(self.as_value_ref()) as usize)
+                Some(LLVMGetNumSuccessors(self.as_value_ref()))
             }
         }
     }
